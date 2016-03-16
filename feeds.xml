@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+  <ModulePrefs title="Hello World!" />
+  <UserPref name="feeds" display_name="feed list" datatype="list" required="true"/> 
+  <UserPref name="labels" display_name="feed list" datatype="list" required="true"/> 
+  <Content type="html">
+    <![CDATA[
+      <style type="text/css" rel="stylesheet" href="main.css">
+      body {
+          margin: 5px 5px;
+          border-style: solid;
+          border-width: 2px;
+          border-radius: 1em;
+          border-color: #848484;
+          padding: 0.3em;
+      }
+      #feed {
+      height: 100%;
+      width: 100%;
+      overflow-y: scroll;
+      overflow-x: hidden;
+      }
+
+      .button {
+        width: 20px;
+        height: 20px;
+        text-align: center;
+        color: white;
+        border-radius: 4px;
+        background: #F0A729;
+        margin: 0px 5px;
+        clear: left;
+        float: left;
+      }
+
+      #feed a {
+        font-size: 95%;
+        color: #2B2B2B;
+        font-weight: bold;
+      }
+      .title {
+        display: block;
+        text-align: left;
+        float: bottom;
+        margin-left: 0px;
+        margin-right: 6px;
+      }
+      .time {
+        display: inline;
+        color: #4d4d4d;
+        font-size: 80%;
+        margin-left: 10px;
+        clear: left;
+      }
+
+      #feed div:hover {
+      }
+
+      .entry1 {
+        background: #FFFFFF;
+        border-color: #3354C0;
+      }
+
+      .entry2 {
+        background: #F2F2F2;
+        border-color: #4470FF;
+      }
+
+      .entry1, .entry2 {
+/*         overflow: hidden; */
+        border-style: solid;
+        border-width: 0px;
+/*         border-bottom-width: 1px; */
+/*         border-color: #4F46FF; */
+        border-left-width: 4px;
+        /*border-right: 0px;*/
+
+        overflow: auto;
+
+        margin-left: 30px;
+        margin-top: 3px;
+        padding: 5px 8px;
+        display: block;
+
+/*         -webkit-border-top-left-radius: 1em; */
+/*         -webkit-border-bottom-left-radius: 1em; */
+/*         -moz-border-radius-bottomleft: 1em; */
+/*         -moz-border-radius-bottomright: 1em; */
+/*         -o-border-radius-topleft: 1em; */
+/*         -o-border-radius-bottomleft: 1em; */
+/*         border-top-left-radius: 1em; */
+/*         border-bottom-left-radius: 1em; */
+       }
+        .content {
+          margin-top: 0px;
+          margin-left: 0px;
+          padding: 5px 5px;
+/*           background: #f9f5cd; */
+          overflow: auto;
+          font-size: 85%;
+        }
+        
+        .label {
+          color: white;
+/*           stext-decoration: line-through; */
+          font-weight: none;
+          font-size: 70%;
+/*           border-style: solid; */
+          border-width: 0px;
+          border-radius: 7px;
+          padding: 3px;
+          background-color: #4470FF;
+          margin: 5px;
+        }
+
+    </style>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.5.1/moment.min.js"></script>
+    <script type="text/javascript">
+
+    google.load("feeds", "1");
+
+    function sortbydate(a,b) {
+      datea = new Date(a.publishedDate);
+      dateb = new Date(b.publishedDate);
+      if ( datea < dateb) {
+        return 1;
+      } else if (datea > dateb) {
+        return -1;
+      } else {
+        return 0;
+      }
+    }
+
+    function myDateFormat(date) {
+      return moment(date).fromNow();
+    }
+    function initialize() {
+      try {
+        var prefs = new gadgets.Prefs();
+        var feed_list = prefs.getArray("feeds");
+        var label_list = prefs.getArray("labels");
+      } catch(e) {
+        feed_list = undefined;
+      }
+//       alert(feed_list);
+      if (!feed_list) {
+        feed_list = ["http://code.google.com/feeds/p/tdt-amiko/gitchanges/basic",
+                    "http://code.google.com/feeds/p/tdt-amiko/issueupdates/basic",
+                    "https://github.com/technic/amiko-e2-pli/commits/master.atom"];
+      }
+      if (!label_list) {
+        label_list = ["tdt-amiko",
+                      "issues",
+                      "enigma2"]
+      }
+      var loadedN = 0;
+      lastid = 0;
+      var idlist = [];
+      var allentrs = [];
+
+      function toogle(i) {
+        console.log("content"+i);
+        c = document.getElementById("content"+i);
+        b = document.getElementById("button"+i);
+        if (c.style.display == "block") {
+          c.style.display = "none";
+          b.innerHTML = "+";
+        }
+        else if (c.style.display == "none") {
+          c.style.display = "block";
+          b.innerHTML = "-";
+        }
+        else {
+          alert(c.style.display);
+        }
+      }
+
+      function onLoad(result, num) {
+        loadedN += 1;
+        if (result.error) {
+          return -1;
+        }
+          var container = document.getElementById("feed");
+          for (var i = 0; i < result.feed.entries.length; i++) {
+
+            label = document.createElement("span");
+            label.className = "label";
+            label.innerHTML = label_list[num];
+
+            var entry = result.feed.entries[i];
+            console.log("process " + entry.publishedDate + " " + entry.title);
+            var wrap = document.createElement("div");
+            wrap.id = "entry" + lastid;
+
+            var div = document.createElement("div");
+            if ( i % 2 == 0 )
+              div.className = "entry1";
+            else
+              div.className = "entry2";
+            var button = document.createElement("div");
+            button.className = "button";
+            button.innerHTML = "+";
+            button.id = "button"+lastid;
+
+            (function(lastid) {
+              button.onclick = function() {toogle(lastid);}
+            })(lastid);
+            var head = document.createElement("div");
+            var headi = document.createElement("a");
+            headi.href = entry.link;
+            headi.target = "_top";
+            head.className = "title";
+            headi.innerHTML = entry.title;
+            head.appendChild(headi);
+            var time = document.createElement("div");
+            time.className = "time";
+            time.innerHTML = myDateFormat(new Date(entry.publishedDate))
+            var content = document.createElement("div");
+            content.id = "content" + lastid;
+            content.className = "content";
+            content.style.display = "none";
+            content.innerHTML = entry.content;
+            div.appendChild(head);
+            head.appendChild(label);
+            div.appendChild(time);
+            div.appendChild(content);
+            
+            function insertEntry(j)
+            {
+              allentrs.splice(j, 0, entry);
+              idlist.splice(j, 0, lastid);
+              lastid += 1;
+            }
+            if (allentrs.length == 0)
+            {
+              insertEntry(0);
+            }
+            else {
+            for (var j = 0; j <= allentrs.length; j++)
+            {
+              if ( j == allentrs.length )
+              {
+                insertEntry(j);
+                break;
+              }
+              d1 = new Date(entry.publishedDate);
+              d2 = new Date(allentrs[j].publishedDate);
+              if (d1 > d2)
+              {
+                insertEntry(j);
+                break;
+              }
+            }}
+            wrap.appendChild(button);
+            wrap.appendChild(div);
+            before = document.getElementById("entry" + idlist[j+1]);
+            container.insertBefore(wrap, before);
+          }
+      }
+      
+      for ( var i = 0; i < feed_list.length; i++) {
+         var feed = new google.feeds.Feed(feed_list[i]);
+         (function(i){
+           feed.load(function(result) { onLoad(result,i) });
+         })(i);
+      }
+    }
+    google.setOnLoadCallback(initialize);
+
+    </script>
+
+    <base target="_top">
+    <div id="feed"></div>
+    </base>
+    ]]>
+  </Content>
+</Module>

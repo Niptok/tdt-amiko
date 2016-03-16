@@ -1,0 +1,313 @@
+<p>These rules are smarter ;)</p>
+
+<p>rules are separated by line break
+all trailing white-spaces are ignored, use them for prettier indentation. Example:
+</p><div class="highlight"><pre><span class="n">megaproject</span>
+   <span class="n">v2</span><span class="mf">.0</span>
+   <span class="nl">file:</span><span class="c1">//hello_world.c;</span>
+</pre></div>
+
+<p>double semicolon or semicolon + linebreak or double linebreak or even linebreak + semicolon
+can be used for separating packages</p>
+
+<p>first three rules are not exactly "rules" they are corresponding to <strong><em>package name</em></strong>, <strong><em>package version</em></strong>
+and <strong><em>build subdirectory</em></strong>.</p>
+
+<h2>
+<a name="rules-format" class="anchor" href="#rules-format"><span class="mini-icon mini-icon-link"></span></a>Rules format</h2>
+
+<p>each next rule is in "command:argument" format
+for example
+</p><div class="highlight"><pre><span class="n">extract</span><span class="o">:</span><span class="n">http</span><span class="o">://</span><span class="n">someserver</span><span class="o">.</span><span class="na">com</span><span class="o">/</span><span class="n">pacakge</span><span class="o">-</span><span class="mf">2.1</span><span class="o">.</span><span class="na">tar</span><span class="o">.</span><span class="na">gz</span>
+</pre></div>
+
+<p>by the way, extract is the default command, so you can type just
+</p><div class="highlight"><pre><span class="nl">http:</span><span class="c1">//someserver.com/pacakge-2.1.tar.gz</span>
+</pre></div>
+if you want only to copy a file to the build directory use
+<div class="highlight"><pre><span class="n">nothing</span><span class="o">:</span><span class="n">http</span><span class="o">://</span><span class="n">someserver</span><span class="o">/</span><span class="n">logo</span><span class="o">.</span><span class="na">png</span>
+</pre></div>
+other available commands are
+
+<ol>
+<li>
+<code>dirextract</code> - first cd to build directory, than extract</li>
+<li>
+<code>patch</code> - apply as patch</li>
+<li>
+<code>rpmbuild</code> - building from rpm package</li>
+</ol><h2>
+<a name="install-commands" class="anchor" href="#install-commands"><span class="mini-icon mini-icon-link"></span></a>install commands</h2>
+
+<ol>
+<li>
+<code>install -.*</code> - install file and pass (.*) arguments to install</li>
+<li>
+<code>install_file</code> - install with -m644</li>
+<li>
+<code>install_bin</code> - install with -m755</li>
+</ol><p>destination file is the last argument
+for example
+</p><div class="highlight"><pre><span class="n">install_bin</span><span class="o">:</span><span class="n">ftp</span><span class="o">://</span><span class="n">megaupload</span><span class="o">.</span><span class="na">com</span><span class="sr">/superscript.sh:/bin/s</span><span class="n">cript</span><span class="o">.</span><span class="na">sh</span>
+</pre></div>
+
+<p>these are most common tasks, see smart-rules.pl for details and feel free to add more..
+However, some special rules is better to write directly to .mk file</p>
+
+<h2>
+<a name="special-variables" class="anchor" href="#special-variables"><span class="mini-icon mini-icon-link"></span></a>Special variables</h2>
+
+<p>To make rules quite you can use two special words, <code>{PN}</code> and <code>{PV}</code> which refers to package name and version.</p>
+
+<p><strong>Note:</strong> in <code>{PN}</code> all "_" symbols replaced with "-"</p>
+
+<h2>
+<a name="fetch-mechanisms" class="anchor" href="#fetch-mechanisms"><span class="mini-icon mini-icon-link"></span></a>Fetch mechanisms</h2>
+
+<p>Now consider sources that are supported:</p>
+
+<ol>
+<li>
+<code>http://</code> - http wget download</li>
+<li>
+<code>ftp://</code> - ftp wget download</li>
+<li>
+<code>file://</code> - look for file in Patches directory</li>
+<li>
+<code>git://www.gitserver.com/gitrepo:r=revision:b=branch:sub=subdir_in_git_tree:protocol=http</code>
+
+<ul>
+<li>
+<strong>revision</strong>, <strong>branch</strong> and <strong>subdirectory</strong> to use (arguments are optional).</li>
+<li> and <strong>protocol</strong> which git should use. (replaces 'git://' while fetch)</li>
+<li>use protocol=ssh to replace "git://" with "git@"</li>
+</ul>
+</li>
+<li>
+<code>svn://www.svnserver.com/svnrepo:r=revision</code>
+
+<ul>
+<li>only <strong>revision</strong> option</li>
+</ul>
+</li>
+</ol><p>if rule command doesn't match ones listed above, this is treated as install/uninstall rule.</p>
+
+<h2>
+<a name="real-example" class="anchor" href="#real-example"><span class="mini-icon mini-icon-link"></span></a>Real example</h2>
+
+<p>below you can see mew lirc rule, which replaces corresponding entries in rules-make, rules-install and rules-archive
+It is much less complicated !
+</p><div class="highlight"><pre><span class="n">lirc</span>
+  <span class="mf">0.9.0</span>
+  <span class="p">{</span><span class="n">PN</span><span class="p">}</span><span class="o">-</span><span class="p">{</span><span class="n">PV</span><span class="p">}</span>
+  <span class="nl">extract:</span><span class="n">http</span><span class="o">:</span><span class="c1">//prdownloads.sourceforge.net/lirc/{PN}-{PV}.tar.gz</span>
+  <span class="nl">patch:</span><span class="n">file</span><span class="o">:</span><span class="c1">//{PN}-{PV}-try_first_last_remote.diff</span>
+  <span class="nl">make:</span><span class="n">install</span><span class="o">:</span><span class="n">DESTDIR</span><span class="o">=</span><span class="n">TARGETS</span>
+  <span class="n">rewrite</span><span class="o">-</span><span class="n">libtool</span><span class="o">:</span><span class="n">TARGETS</span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">liblirc_client</span><span class="p">.</span><span class="n">la</span>
+<span class="p">;</span>
+</pre></div>
+
+<h2>
+<a name="how-does-it-interacts-with-make-" class="anchor" href="#how-does-it-interacts-with-make-"><span class="mini-icon mini-icon-link"></span></a>How does it interacts with make ?</h2>
+
+<p>Using smart-rules is optional, but smart-rules.pl generates macroses to make downloading, patching etc. tasks a bit easier.
+You can find the output of smart-rules.pl script in cdk/ruledir directory.
+These files are imported to Makefile after running ./configure (runs automaticaly).</p>
+
+<p>So for example for udpxy you'll have:</p>
+
+<ul>
+<li> $(DIR_ntpclient) directory where sources are extracted (buid dir)</li>
+<li> $(DEPENDS_ntpclient) is list of all files to built package from.
+Place into target depends, so changing one of them invokes rebuild.</li>
+<li> $(PREPARE_ntpclient) rules for download, extract and patch files above.</li>
+<li> $(SOURCES_udpxy) list of files above. Used later in package Control file.</li>
+<li> $(VERSION_udpxy) Used later in package Control file too.</li>
+<li> $(AUTOPKGV_udpxy) If there is svn or git repo in rules, this command will be generated and you can run it
+to eval $(PKGV_udpxy) based on git date or svn revision.</li>
+<li> $(INSTALL_udpxy) command could be 'make install' and commands to copy other files to PKDIR.</li>
+</ul><h1>
+<a name="make-mk-files" class="anchor" href="#make-mk-files"><span class="mini-icon mini-icon-link"></span></a>Make *mk files</h1>
+
+<p>You can use it as example of building and making package for new utility.</p>
+
+<p>First of all take a look at smart-rules. Read the documentation at the beginning and write udpxy rules:
+</p><div class="highlight"><pre><span class="nt">BEGIN</span><span class="cp">[</span><span class="err">[</span>
+<span class="nx">udpxy</span>
+  <span class="mf">1.0.23</span><span class="o">-</span><span class="mi">0</span>
+  <span class="p">{</span><span class="nx">PN</span><span class="p">}</span><span class="o">-</span><span class="p">{</span><span class="nx">PV</span><span class="p">}</span>
+  <span class="nx">http</span><span class="p">:</span><span class="c1">//sourceforge.net/projects/udpxy/files/udpxy/Chipmunk-1.0/udpxy.{PV}-prod.tar.gz</span>
+  <span class="vi">#for</span> <span class="nx">patch</span> <span class="na">-p0</span> <span class="nx">use</span> <span class="nx">the</span> <span class="nx">following</span>
+  <span class="nx">patch</span><span class="o">-</span><span class="mi">0</span><span class="p">:</span><span class="nb">file</span><span class="p">:</span><span class="c1">//udpxy-makefile.patch</span>
+<span class="p">;</span>
+<span class="cp">]</span><span class="o">]</span><span class="nt">END</span>
+</pre></div>
+
+<h2>
+<a name="learning-by-example" class="anchor" href="#learning-by-example"><span class="mini-icon mini-icon-link"></span></a>Learning by example</h2>
+
+<p>At the first stage let's build one single package. For example udpxy. Be careful, each package name should be unique.
+First of all you should define some necessary info about your package.
+Such as 'Description:' field in control file</p>
+
+<p><code>DESCRIPTION_udpxy := udp to http stream proxy</code></p>
+
+<p>Next set package release number and increase it each time you change something here in make scripts or your own patches.
+Release number is part of the package version, updating it tells others that they can upgrade their system now.</p>
+
+<p><code>PKGR_udpxy = r0</code></p>
+
+<p>Other variables are optional and have default values and another are taken from smart-rules (full list below)</p>
+
+<h2>
+<a name="make-targets" class="anchor" href="#make-targets"><span class="mini-icon mini-icon-link"></span></a>make targets</h2>
+
+<p>Usually each utility is split into three make-targets. Target name and package name 'udpxy' should be the same.</p>
+
+<p>Write<br><code>$(DEPDIR)/udpxy.do_prepare:</code></p>
+
+<p>But not<br><code>$(DEPDIR)/udpxy_proxy.do_prepare:</code></p>
+
+<p><strong>exceptions</strong> of this rule discussed later.</p>
+
+<p>Also target should contain only A-z characters and underscore "_".</p>
+
+<h2>
+<a name="do-prepare" class="anchor" href="#do-prepare"><span class="mini-icon mini-icon-link"></span></a>do prepare</h2>
+
+<p>Firstly, downloading and patching. Use <code>$(DEPENDS_udpxy)</code> from smart rules as target-depends.<br>
+In the body use <code>$(PREPARE_udpxy)</code> generated by smart-rules<br>
+You can add your special commands too.
+</p><div class="highlight"><pre><span class="err">$</span><span class="p">(</span><span class="n">DEPDIR</span><span class="p">)</span><span class="o">/</span><span class="n">udpxy</span><span class="p">.</span><span class="n">do_prepare</span><span class="o">:</span> <span class="err">$</span><span class="p">(</span><span class="n">DEPENDS_udpxy</span><span class="p">)</span>
+        <span class="err">$</span><span class="p">(</span><span class="n">PREPARE_udpxy</span><span class="p">)</span>
+        <span class="n">touch</span> <span class="err">$@</span>
+</pre></div>
+
+<h2>
+<a name="do-compile" class="anchor" href="#do-compile"><span class="mini-icon mini-icon-link"></span></a>do compile</h2>
+
+<p>Secondly, the configure and compilation stage<br>
+Each target should ends with <code>touch $@</code>
+</p><div class="highlight"><pre><span class="err">$</span><span class="p">(</span><span class="n">DEPDIR</span><span class="p">)</span><span class="o">/</span><span class="n">udpxy</span><span class="p">.</span><span class="n">do_compile</span><span class="o">:</span> <span class="err">$</span><span class="p">(</span><span class="n">DEPDIR</span><span class="p">)</span><span class="o">/</span><span class="n">udpxy</span><span class="p">.</span><span class="n">do_prepare</span>
+        <span class="n">cd</span> <span class="err">$</span><span class="p">(</span><span class="n">DIR_udpxy</span><span class="p">)</span> <span class="o">&amp;&amp;</span> \
+                <span class="n">export</span> <span class="n">CC</span><span class="o">=</span><span class="n">sh4</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">gcc</span> <span class="o">&amp;&amp;</span> \
+                <span class="err">$</span><span class="p">(</span><span class="n">MAKE</span><span class="p">)</span>
+        <span class="n">touch</span> <span class="err">$@</span>
+</pre></div>
+
+<h2>
+<a name="complete" class="anchor" href="#complete"><span class="mini-icon mini-icon-link"></span></a>complete</h2>
+
+<p>Finally, install and packaging!</p>
+
+<p>How does it works:</p>
+
+<ul>
+<li> start with line <code>$(start_build)</code> to prepare temporary directories and determine package name by the target name.</li>
+<li> At first all files should go to temporary directory <code>$(PKDIR)</code> which is cdk/packagingtmpdir.</li>
+<li> If you fill <code>$(PKDIR)</code> correctly then our scripts could proceed.</li>
+</ul><p>You could call one of the following:</p>
+
+<ul>
+<li>  <code>$(tocdk_build)</code> - copy all $(PKDIR) contents to tufsbox/cdkroot to use them later if something depends on them.</li>
+<li>  <code>$(extra_build)</code> - perform strip and cleanup, then make package ready to install on your box. You can find ipk in tufsbox/ipkbox</li>
+<li>  <code>$(toflash_build)</code> - At first do exactly that $(extra_build) does. After install package to pkgroot to include it in image.</li>
+<li>  <code>$(e2extra_build)</code> - same as $(extra_build) but copies ipk to tufsbox/ipkextras</li>
+</ul><p><strong>Tip:</strong> <code>$(tocdk_build)</code> and <code>$(toflash_build)</code> could be used simultaneously.
+</p><div class="highlight"><pre><span class="err">$</span><span class="p">(</span><span class="n">DEPDIR</span><span class="p">)</span><span class="o">/</span><span class="n">udpxy</span><span class="o">:</span> <span class="err">$</span><span class="p">(</span><span class="n">DEPDIR</span><span class="p">)</span><span class="o">/</span><span class="n">udpxy</span><span class="p">.</span><span class="n">do_compile</span>
+        <span class="err">$</span><span class="p">(</span><span class="n">start_build</span><span class="p">)</span>
+        <span class="n">cd</span> <span class="err">$</span><span class="p">(</span><span class="n">DIR_udpxy</span><span class="p">)</span>  <span class="o">&amp;&amp;</span> \
+                <span class="n">export</span> <span class="n">INSTALLROOT</span><span class="o">=</span><span class="err">$</span><span class="p">(</span><span class="n">PKDIR</span><span class="p">)</span><span class="o">/</span><span class="n">usr</span> <span class="o">&amp;&amp;</span> \
+                <span class="err">$</span><span class="p">(</span><span class="n">MAKE</span><span class="p">)</span> <span class="n">install</span>
+        <span class="err">$</span><span class="p">(</span><span class="n">extra_build</span><span class="p">)</span>
+        <span class="n">touch</span> <span class="err">$@</span>
+</pre></div>
+
+<p>Note: all above defined variables has suffix 'udpxy' same as make-target name '$(DEPDIR)/udpxy'<br>
+If you want to change name of make-target for some reason add $(call parent_pk,udpxy) before $(start_build) line.
+Of course place your variables suffix instead of udpxy.</p>
+
+<h2>
+<a name="some-words-about-git-and-svn" class="anchor" href="#some-words-about-git-and-svn"><span class="mini-icon mini-icon-link"></span></a>Some words about git and svn.</h2>
+
+<p>It is available to automatically determine version from git and svn</p>
+
+<p>If there is git/svn rule in smart-rules and the version equals git/svn then the version will be automatically evaluated during <code>$(start_build)</code></p>
+
+<p><strong>Note:</strong> it is assumed that there is only one repo for the utility.</p>
+
+<p>If you use your own git/svn fetch mechanism we provide you with <code>$(get_git_version)</code> or <code>$(get_svn_version)</code>, but make sure that <code>$(DIR_foo)</code> is git/svn repo.</p>
+
+<h2>
+<a name="files-variable" class="anchor" href="#files-variable"><span class="mini-icon mini-icon-link"></span></a>FILES variable</h2>
+
+<p>FILES variable is the filter for your <code>$(PKDIR)</code>, by default it equals "/" so all files from <code>$(PKDIR)</code> are built into the package. It is list of files and directories separated by space. Wildcards are supported.
+Wildcards used in the FILES variables are processed via the python function fnmatch. The following items are of note about this function:</p>
+
+<ul>
+<li> <code>/&lt;dir&gt;/*</code>: This will match all files and directories in the dir - it will not match other directories.</li>
+<li> <code>/&lt;dir&gt;/a*</code>: This will only match files, and not directories.</li>
+<li> <code>/dir</code>: will include the directory dir in the package, which in turn will include all files in the directory and all subdirectories.</li>
+</ul><h2>
+<a name="info-about-some-additional-variables" class="anchor" href="#info-about-some-additional-variables"><span class="mini-icon mini-icon-link"></span></a>Info about some additional variables</h2>
+
+<ul>
+<li> PKGV_foo
+Taken from smart rules version. Set if you don't use smart-rules</li>
+<li> SRC_URI_foo
+Sources from which package is built, taken from smart-rules file://, http://, git://, svn:// rules.</li>
+<li> NAME_foo
+If real package name is too long put it in this variable. By default it is like in varible names.</li>
+</ul><h3>
+<a name="control-file" class="anchor" href="#control-file"><span class="mini-icon mini-icon-link"></span></a>CONTROL file</h3>
+
+<p>Next variables has default values and influence CONTROL file fields only:</p>
+
+<ul>
+<li> MAINTAINER_foo := Ar-P team</li>
+<li> PACKAGE_ARCH_foo := sh4</li>
+<li> SECTION_foo := base</li>
+<li> PRIORITY_foo := optional</li>
+<li> LICENSE_foo := unknown</li>
+<li> HOMEPAGE_foo := unknown</li>
+</ul><p>You set package dependencies in CONTROL file with:</p>
+
+<ul>
+<li> RDEPENDS_foo :=</li>
+<li> RREPLACES :=</li>
+<li> RCONFLICTS :=</li>
+</ul><h2>
+<a name="postpre-instrm-scripts" class="anchor" href="#postpre-instrm-scripts"><span class="mini-icon mini-icon-link"></span></a>post/pre inst/rm Scripts</h2>
+
+<p>For these sripts use make define as following:
+</p><div class="highlight"><pre><span class="n">define</span> <span class="n">postinst_foo</span>
+<span class="o">!/</span><span class="n">bin</span><span class="o">/</span><span class="n">sh</span>
+<span class="n">initdconfig</span> <span class="o">--</span><span class="n">add</span> <span class="n">foo</span>
+<span class="n">endef</span>
+</pre></div>
+
+<p>This is all about scripts
+Note: init.d script starting and stopping is handled by initdconfig</p>
+
+<h2>
+<a name="multi-packaging" class="anchor" href="#multi-packaging"><span class="mini-icon mini-icon-link"></span></a>Multi-Packaging</h2>
+
+<p>When you whant to split files from one target to different packages you should set PACKAGES_parentfoo value.
+By default parentfoo is equals make target name. Place subpackages names to PACKAGES_parentfoo variable,
+parentfoo could be also in the list. Example:<br><code>PACKAGES_megaprog = megaprog_extra megaprog</code></p>
+
+<p>Then set FILES for each subpackage<br><code>FILES_megaprog = /bin/prog /lib/*.so*</code><br><code>FILES_megaprog_extra = /lib/megaprog-addon.so</code></p>
+
+<p><strong>NOTE:</strong> files are moving to pacakges in same order(priority) they are listed in PACKAGES variable.</p>
+
+<h2>
+<a name="optional-install-to-flash" class="anchor" href="#optional-install-to-flash"><span class="mini-icon mini-icon-link"></span></a>Optional install to flash</h2>
+
+<p>When you call <code>$(tocdk_build)</code>/<code>$(toflash_build)</code> all packages are installed to image.
+If you want to select some non-installing packages from the same target (multi-packaging case)<br>
+just list them in <code>EXTRA_parentfoo</code> variable<br><code>DIST_parentfoo</code> variable works vice-versa</p>
+    </div>
+  </div>
+  </div>
+
+</div>

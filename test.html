@@ -1,0 +1,25 @@
+<html>
+
+<head>
+
+<script>
+function load() {
+iframe = document.getElementById('hack');
+x = iframe.contentDocument || iframe.contentWindow.document;
+c = x.getElementById('wikimaincol').innerHTML;
+alert(c);
+document.getElementById('content').innerHTML = c;
+}
+</script>
+</head>
+<body>
+<iframe id="hack" src="http://code.google.com/p/tdt-amiko/wiki/homepage" onload="load()">
+  <p>Your browser does not support iframes.</p>
+</iframe>
+
+<div id="content"/>
+
+</body>
+
+</html>
+
